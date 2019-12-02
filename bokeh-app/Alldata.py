@@ -4,6 +4,7 @@ Created on Sun Dec  1 11:38:48 2019
 
 @author: yary0
 """
+from os.path import join, dirname
 import numpy as np
 import pandas as pd
 
