@@ -13,7 +13,7 @@ files=['tipificacion_'+m +'.xlsx' for m in months]
 dfs=[]
 for file in files:
     
-    data=pd.ExcelFile(file)
+    data=pd.ExcelFile('data\'+file)
     df=data.parse('atento')
     dfs.append(df)
 
