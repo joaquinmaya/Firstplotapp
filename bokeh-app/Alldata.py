@@ -9,11 +9,11 @@ import pandas as pd
 
 months=['april','may','june','july','august','september','october','november']
 
-files=['tipificacion_'+m +'.xlsx' for m in months]
+files=['\data\tipificacion_'+m +'.xlsx' for m in months]
 dfs=[]
 for file in files:
     
-    data=pd.ExcelFile('data\'+file)
+    data=pd.ExcelFile(file)
     df=data.parse('atento')
     dfs.append(df)
 
