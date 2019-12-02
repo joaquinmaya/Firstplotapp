@@ -1,89 +1,82 @@
-from os.path import join, dirname
-import datetime
-
 import pandas as pd
-from scipy.signal import savgol_filter
-
-from bokeh.io import curdoc
-from bokeh.layouts import row, column
-from bokeh.models import ColumnDataSource, DataRange1d, Select
-from bokeh.palettes import Blues4
+import numpy as np
+import matplotlib.pyplot as plt
+#import seaborn as sns
+from bokeh.io import output_file, show,curdoc
 from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource, HoverTool, Select
+from bokeh.layouts import widgetbox,row
+from bokeh.models import Slider
+from bokeh.models.annotations import Title
+import Alldata
 
-STATISTICS = ['record_min_temp', 'actual_min_temp', 'average_min_temp', 'average_max_temp', 'actual_max_temp', 'record_max_temp']
+dfbymonth=Alldata.dfbymonth
+description=Alldata.description
+dfbydate=Alldata.dfbydate
 
-def get_dataset(src, name, distribution):
-    df = src[src.airport == name].copy()
-    del df['airport']
-    df['date'] = pd.to_datetime(df.date)
-    # timedelta here instead of pd.DateOffset to avoid pandas bug < 0.18 (Pandas issue #11925)
-    df['left'] = df.date - datetime.timedelta(days=0.5)
-    df['right'] = df.date + datetime.timedelta(days=0.5)
-    df = df.set_index(['date'])
-    df.sort_index(inplace=True)
-    if distribution == 'Smoothed':
-        window, order = 51, 3
-        for key in STATISTICS:
-            df[key] = savgol_filter(df[key], window, order)
 
-    return ColumnDataSource(data=df)
+source=ColumnDataSource(data={'x':dfbymonth[dfbymonth.month==4].Count,
+                              'description':dfbymonth[dfbymonth.month==4].sub_description})
 
-def make_plot(source, title):
-    plot = figure(x_axis_type="datetime", plot_width=800, tools="", toolbar_location=None)
-    plot.title.text = title
+hover=HoverTool(tooltips=[('Count','@x')])
 
-    plot.quad(top='record_max_temp', bottom='record_min_temp', left='left', right='right',
-              color=Blues4[2], source=source, legend="Record")
-    plot.quad(top='average_max_temp', bottom='average_min_temp', left='left', right='right',
-              color=Blues4[1], source=source, legend="Average")
-    plot.quad(top='actual_max_temp', bottom='actual_min_temp', left='left', right='right',
-              color=Blues4[0], alpha=0.5, line_color="black", source=source, legend="Actual")
+p=figure(y_range=description, x_axis_label='Count', 
+         y_axis_label='description', plot_height=700, x_range=(0,2000))
 
-    # fixed attributes
-    plot.xaxis.axis_label = None
-    plot.yaxis.axis_label = "Temperature (F)"
-    plot.axis.axis_label_text_font_style = "bold"
-    plot.x_range = DataRange1d(range_padding=0.0)
-    plot.grid.grid_line_alpha = 0.3
+p.hbar(right='x', y='description', height=0.2 ,source=source)
 
-    return plot
+p.add_tools(hover)
 
-def update_plot(attrname, old, new):
-    city = city_select.value
-    plot.title.text = "Weather data for " + cities[city]['title']
+menu= Select(title='Frequency',options=['day','month'],value='month')
 
-    src = get_dataset(df, cities[city]['airport'], distribution_select.value)
-    source.data.update(src.data)
+slider=Slider(title='month',start=4, end=11, step=1, value=4)
 
-city = 'Austin'
-distribution = 'Discrete'
+def update_time(attr,old,new):
+    time=slider.value
+    if menu.value=='month':
+        new_data={'x':dfbymonth[dfbymonth.month==time].Count,
+              'description':dfbymonth[dfbymonth.month==time].sub_description}
+    if menu.value=='day':
+        new_data={'x':dfbydate[dfbydate.index.dayofyear==time].Count,
+                  'description':dfbydate[dfbydate.index.dayofyear==time].sub_description}
+        
+    source.data=new_data
 
-cities = {
-    'Austin': {
-        'airport': 'AUS',
-        'title': 'Austin, TX',
-    },
-    'Boston': {
-        'airport': 'BOS',
-        'title': 'Boston, MA',
-    },
-    'Seattle': {
-        'airport': 'SEA',
-        'title': 'Seattle, WA',
-    }
-}
 
-city_select = Select(value=city, title='City', options=sorted(cities.keys()))
-distribution_select = Select(value=distribution, title='Distribution', options=['Discrete', 'Smoothed'])
 
-df = pd.read_csv(join(dirname(__file__), 'data/2015_weather.csv'))
-source = get_dataset(df, cities[city]['airport'], distribution)
-plot = make_plot(source, "Weather data for " + cities[city]['title'])
+   
 
-city_select.on_change('value', update_plot)
-distribution_select.on_change('value', update_plot)
+def update_freq(attr,old,new):
+    freq=menu.value
+    if freq=='day':
+        p.x_range.end=300
+        slider.title='day'
+        slider.start=dfbydate.index.dayofyear.min()
+        slider.end=dfbydate.index.dayofyear.max()
+        slider.value=dfbydate.index.dayofyear.min()
+        new_data={'x':dfbydate[dfbydate.index.dayofyear==slider.value].Count,
+                  'description':dfbydate[dfbydate.index.dayofyear==slider.value].sub_description}
+        
+    if freq=='month':       
+        p.x_range.end=2000
+        slider.title='month'
+        slider.start=dfbymonth.month.min()
+        slider.end=dfbymonth.month.max()
+        slider.value=dfbymonth.month.min()
+        new_data={'x':dfbymonth[dfbymonth.month==slider.value].Count,
+              'description':dfbymonth[dfbymonth.month==slider.value].sub_description}
+    
+    source.data=new_data    
+    
 
-controls = column(city_select, distribution_select)
 
-curdoc().add_root(row(plot, controls))
-curdoc().title = "Weather"
+
+menu.on_change('value',update_freq)
+slider.on_change('value',update_time)
+         
+    
+
+layout=row(widgetbox([menu,slider]),p)
+
+
+curdoc().add_root(layout)
