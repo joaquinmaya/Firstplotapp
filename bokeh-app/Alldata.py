@@ -11,9 +11,9 @@ months=['april','may','june','july','august','september','october','november']
 
 files=['data\tipificacion_'+m +'.xlsx' for m in months]
 dfs=[]
-for file in files:
+for f in files:
     
-    data=pd.ExcelFile(file)
+    data=pd.ExcelFile(join(dirname(__file__), f)
     df=data.parse('atento')
     dfs.append(df)
 
