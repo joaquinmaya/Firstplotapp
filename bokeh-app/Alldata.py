@@ -10,7 +10,7 @@ import pandas as pd
 
 months=['april','may','june','july','august','september','october','november']
 
-files=['data\tipificacion_'+m +'.xlsx' for m in months]
+files=['data\\tipificacion_'+m +'.xlsx' for m in months]
 dfs=[]
 for f in files:
     
