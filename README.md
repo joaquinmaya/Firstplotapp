@@ -1,7 +1,6 @@
 # Running a bokeh server with Binder
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/binder-examples/bokeh/master?urlpath=/proxy/5006/bokeh-app)
-
+https://mybinder.org/v2/gh/joaquinmaya/Firstplotapp/tree/master/bokeh-app/master
 This repository demonstrates how to run a Bokeh server from within Binder. To do so, we did the following things:
 
 1. Created a `bokeh-app` directory in the repo with a `main.py` file in it. This is the application that will be served. We've added the
