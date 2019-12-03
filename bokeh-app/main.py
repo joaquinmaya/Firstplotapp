@@ -1,6 +1,6 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+#import numpy as np
+#import matplotlib.pyplot as plt
 #import seaborn as sns
 from bokeh.io import output_file, show,curdoc
 from bokeh.plotting import figure
